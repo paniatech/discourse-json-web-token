@@ -2,17 +2,17 @@
 
 enabled_site_setting :custom_token_auth_enabled
 
-PLUGIN_NAME = 'discourse-json-web-token'
+PLUGIN_NAME = 'discourse-json-web-token'.freeze
 
 after_initialize do
-  module ::CustomTokenAuth
+  module ::DiscourseJsonWebToken
     class Engine < ::Rails::Engine
       engine_name PLUGIN_NAME
-      isolate_namespace CustomTokenAuth
+      isolate_namespace DiscourseJsonWebToken
     end
   end
 
-  class CustomTokenAuth::AuthController < ApplicationController
+  class DiscourseJsonWebToken::AuthController < ApplicationController
     skip_before_action :redirect_to_login_if_required
 
     def login
@@ -49,7 +49,7 @@ after_initialize do
     def extract_user_info(token)
       # Extract user information from the token
       # This should return a hash with user info, e.g. { username: ..., email: ..., etc. }
-      { id: '123456789', name: 'erfan', username: 'erfan', email: 'erfan@example.com' , password: '123456789'} # Placeholder, replace with actual extraction logic
+      { id: '123456789', name: 'erfan', username: 'erfan', email: 'erfan@example.com', password: '123456789' } # Placeholder, replace with actual extraction logic
     end
 
     def find_or_create_user(user_info)
@@ -60,6 +60,6 @@ after_initialize do
   end
 
   Discourse::Application.routes.append do
-    get "/auth/token_login" => "custom_token_auth/auth#login"
+    get "/auth/token_login" => "discourse_json_web_token/auth#login"
   end
 end
