@@ -1,4 +1,8 @@
-# plugin.rb
+# name: discourse-json-web-token
+# about: A jwt discourse plugin
+# version: 0.1
+# authors: erfan zamanzadeh
+# url: https://github.com/paniatech/my_plugin
 
 enabled_site_setting :custom_token_auth_enabled
 
@@ -19,15 +23,29 @@ after_initialize do
       # Extract token from cookies
       token = cookies[:token]
 
+      Rails.logger.info("Congratulations, your plugin is now working!")
+      Rails.logger.info("TOKEN:")
+      Rails.logger.info(token)
+
       if token.present?
         # Validate token here (implement your own logic)
         if valid_token?(token)
           # Find or create user based on token data
           user_info = extract_user_info(token)
+
+          Rails.logger.info("user_info:")
+          Rails.logger.info(user_info)
+
           user = find_or_create_user(user_info)
+
+          Rails.logger.info("user:")
+          Rails.logger.info(user)
+
 
           # Log the user in
           log_on_user(user)
+
+          Rails.logger.info("Redirect:")
 
           # Redirect to homepage or wherever you want
           return redirect_to "/"
