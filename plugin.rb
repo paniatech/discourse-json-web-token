@@ -2,7 +2,7 @@
 
 enabled_site_setting :custom_token_auth_enabled
 
-PLUGIN_NAME ||= 'CustomTokenAuth'.freeze
+PLUGIN_NAME = 'discourse-json-web-token'
 
 after_initialize do
   module ::CustomTokenAuth
