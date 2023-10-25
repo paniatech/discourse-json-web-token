@@ -1,4 +1,6 @@
 plugins:
-  jwt_enabled: false
+  custom_token_auth_enabled:
+    default: true
+    client: true
   jwt_secret: ""
   jwt_auth_url: ""
