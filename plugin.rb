@@ -1,35 +1,65 @@
-# frozen_string_literal: true
-# name: discourse-jwt
-# about: JSON Web Tokens Auth Provider
-# version: 0.1
-# author: Robin Ward
+# plugin.rb
 
-gem "discourse-omniauth-jwt", "0.0.2", require: false
+enabled_site_setting :custom_token_auth_enabled
 
-require 'omniauth/jwt'
+PLUGIN_NAME ||= 'CustomTokenAuth'.freeze
 
-class JWTAuthenticator < Auth::ManagedAuthenticator
-  def name
-    'jwt'
+after_initialize do
+  module ::CustomTokenAuth
+    class Engine < ::Rails::Engine
+      engine_name PLUGIN_NAME
+      isolate_namespace CustomTokenAuth
+    end
   end
 
-  def register_middleware(omniauth)
-    omniauth.provider :jwt,
-                      name: 'jwt',
-                      uid_claim: 'id',
-                      required_claims: ['id', 'email', 'name'],
-                      setup: lambda { |env|
-                        opts = env['omniauth.strategy'].options
-                        opts[:secret] = SiteSetting.jwt_secret
-                        opts[:auth_url] = SiteSetting.jwt_auth_url
-                      }
+  class CustomTokenAuth::AuthController < ApplicationController
+    skip_before_action :redirect_to_login_if_required
+
+    def login
+      # Extract token from cookies
+      token = cookies[:token]
+
+      if token.present?
+        # Validate token here (implement your own logic)
+        if valid_token?(token)
+          # Find or create user based on token data
+          user_info = extract_user_info(token)
+          user = find_or_create_user(user_info)
+
+          # Log the user in
+          log_on_user(user)
+
+          # Redirect to homepage or wherever you want
+          return redirect_to "/"
+        end
+      end
+
+      # Handle invalid or expired token, or token not present
+      redirect_to "/login"
+    end
+
+    private
+
+    def valid_token?(token)
+      # Implement your token validation logic here
+      # This should return true if the token is valid, and false otherwise
+      true # Placeholder, replace with actual validation logic
+    end
+
+    def extract_user_info(token)
+      # Extract user information from the token
+      # This should return a hash with user info, e.g. { username: ..., email: ..., etc. }
+      { id: '123456789', name: 'erfan', username: 'erfan', email: 'erfan@example.com' , password: '123456789'} # Placeholder, replace with actual extraction logic
+    end
+
+    def find_or_create_user(user_info)
+      # Find or create a Discourse user based on the user info
+      # This should return a user object
+      User.find_or_create_by!(id: user_info[:id], name: user_info[:name], username: user_info[:username], email: user_info[:email], password: user_info[:password])
+    end
   end
 
-  def enabled?
-    # Check the global setting for backwards-compatibility.
-    # When this plugin used only global settings, there was no separate enable setting
-    SiteSetting.jwt_enabled || GlobalSetting.try(:jwt_auth_url)
+  Discourse::Application.routes.append do
+    get "/auth/token_login" => "custom_token_auth/auth#login"
   end
 end
-
-auth_provider authenticator: JWTAuthenticator.new
